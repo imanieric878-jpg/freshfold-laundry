@@ -44,10 +44,15 @@ window.OrdersModule = {
                     const index = this.state.orders.findIndex(o => o.id === payload.new.id);
                     if (index !== -1) this.state.orders[index] = payload.new;
                     
-                    // Show toast for status updates
+                    // Show toast and notification for status updates
                     if (payload.old.status !== payload.new.status) {
-                        AppUtils.showToast(`Order Status: ${payload.new.status}`);
+                        const msg = `Your order is now: ${payload.new.status}`;
+                        AppUtils.showToast(msg);
+                        AppUtils.addNotification(`Order Update`, msg);
                     }
+                    
+                    // Update location header if it's the latest order
+                    if (payload.new.address) AppUtils.updateLocationHeader(payload.new.address);
                 }
                 
                 if (window.location.hash === '#orders') this.render();
