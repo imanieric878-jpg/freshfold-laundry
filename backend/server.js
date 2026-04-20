@@ -30,41 +30,40 @@ app.post('/api/mpesa/stkpush', async (req, res) => {
         let formattedPhone = phone.replace(/\s+/g, '').replace('+', '');
         if (formattedPhone.startsWith('0')) formattedPhone = '254' + formattedPhone.substring(1);
 
-        // Lipana.dev Payload Structure
+        // Verified Lipana.dev Payload
         const payload = {
-            msisdn: formattedPhone,
-            amount: Math.ceil(amount),
-            callback_url: `${process.env.APP_URL}/api/mpesa/callback`,
-            account_reference: `FF-${orderId.substring(0, 8)}`, // Prefix to distinguish from other projects
-            transaction_description: "Payment for FreshFold Laundry"
+            phone: formattedPhone.startsWith('+') ? formattedPhone : `+${formattedPhone}`,
+            amount: Math.max(10, Math.ceil(amount)) // Minimum Ksh 10 required
         };
 
         const response = await axios.post(
-            "https://api.lipana.dev/v1/mpesa/stk/push",
+            "https://api.lipana.dev/v1/transactions/push-stk",
             payload,
             { 
                 headers: { 
-                    'Authorization': `Bearer ${process.env.LIPANA_SECRET_KEY}`,
+                    'x-api-key': process.env.LIPANA_SECRET_KEY,
                     'Content-Type': 'application/json'
                 } 
             }
         );
 
-        // Update order with checkout ID (Lipana returns 'checkout_id')
-        if (response.data.checkout_id) {
+        // Update order with checkout ID (Lipana returns 'checkout_id' or 'transaction_id')
+        const checkoutId = response.data.checkout_id || response.data.transaction_id;
+        
+        if (checkoutId) {
             const { error } = await supabase
                 .from('orders')
-                .update({ checkout_id: response.data.checkout_id })
+                .update({ checkout_id: checkoutId })
                 .eq('id', orderId);
             
             if (error) console.error("❌ Supabase Update Error:", error.message);
         }
 
-        console.log(`✅ Lipana Request Accepted: ${response.data.checkout_id}`);
+        console.log(`✅ Lipana Request Accepted: ${checkoutId}`);
         res.json({ success: true, data: response.data });
     } catch (error) {
-            // Detailed error reporting for debugging
-      const errorMessage = error.response ? JSON.stringify(error.response.data) : error.message;
+        // Detailed error reporting for debugging
+        const errorMessage = error.response ? JSON.stringify(error.response.data) : error.message;
         console.error("❌ Lipana STK Push Failed:", errorMessage);
         res.status(500).json({ 
             success: false, 
