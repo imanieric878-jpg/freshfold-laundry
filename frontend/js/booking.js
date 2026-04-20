@@ -299,7 +299,8 @@ window.BookingModule = {
             
             this.newOrderId = data[0].id;
 
-            const response = await fetch('https://freshfold-laundry.vercel.app/api/mpesa/stkpush', {
+            const response = await fetch('https://freshfold-api.vercel.app/api/mpesa/stkpush', {
+
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ phone: phone, amount: this.state.totalAmount, orderId: this.newOrderId })
             });
