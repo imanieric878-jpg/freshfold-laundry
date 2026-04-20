@@ -102,6 +102,9 @@ async function handleRoute() {
         case 'profile':
             if (window.ProfileModule) window.ProfileModule.render();
             break;
+        case 'admin':
+            if (window.AdminModule) window.AdminModule.render();
+            break;
         default:
             renderHome();
     }
