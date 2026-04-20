@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FreshFold Laundry</title>
+    
+    <!-- SEO Best Practices -->
+    <meta name="description" content="FreshFold Laundry: We Pick It Up. We Clean It. We Bring It Back Fresh. The premier laundry pickup and delivery service in Nairobi.">
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Protocol Check: Warn if opening via file:// protocol
+        if (window.location.protocol === 'file:') {
+            console.warn("⚠️ FreshFold: Opening via file:// protocol. Some features like API calls and certain Firebase functions will be blocked by browser security. Please use a local server (e.g., 'vercel dev' or VS Code Live Server).");
+        }
+
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#10B981', // Fresh green
+                        accent: '#3B82F6',  // Soft blue
+                        background: '#F8FAFC',
+                        textDark: '#1F2937',
+                        textMuted: '#64748B'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #1F2937; }
+        /* Smooth transitions */
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        /* Hide scrollbar for clean look */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        
+        .toast { transition: opacity 0.3s, transform 0.3s; }
+    </style>
+</head>
+<body class="bg-background pb-20 pt-16 selection:bg-primary selection:text-white">
+
+    <!-- Top Header -->
+    <header class="fixed top-0 left-0 right-0 h-16 bg-white shadow-sm z-40 flex items-center justify-between px-4">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                <i class="fa-solid fa-shirt"></i>
+            </div>
+            <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">FreshFold</h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="text-sm border rounded-full px-3 py-1 flex items-center gap-1 bg-gray-50 border-gray-100">
+                <i class="fa-solid fa-location-dot text-primary text-xs"></i>
+                <span class="font-medium text-textDark" id="header-location">Nairobi CBD</span>
+            </div>
+            <button class="relative text-gray-500 hover:text-primary transition">
+                <i class="fa-regular fa-bell text-xl"></i>
+                <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area where views will be injected -->
+    <main id="app-content" class="w-full min-h-screen relative p-4 max-w-lg mx-auto md:max-w-xl"></main>
+
+    <!-- Floating Action Button for New Booking -->
+    <button id="fab-booking" onclick="window.location.hash='#booking'" class="fixed bottom-24 right-4 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center text-2xl hover:scale-105 active:scale-95 transition-transform z-40">
+        <i class="fa-solid fa-plus"></i>
+    </button>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 h-20 bg-white border-t border-gray-100 z-50 flex justify-between items-center px-6 pb-2 safe-bottom">
+        <a href="#home" class="nav-link flex flex-col items-center gap-1 text-primary transition w-16" data-target="home">
+            <i class="fa-solid fa-house text-xl"></i>
+            <span class="text-[10px] font-medium">Home</span>
+        </a>
+        <a href="#services" class="nav-link flex flex-col items-center gap-1 text-gray-400 hover:text-primary transition w-16" data-target="services">
+            <i class="fa-solid fa-layer-group text-xl"></i>
+            <span class="text-[10px] font-medium">Services</span>
+        </a>
+        <a href="#orders" class="nav-link flex flex-col items-center gap-1 text-gray-400 hover:text-primary transition w-16" data-target="orders">
+            <i class="fa-solid fa-receipt text-xl"></i>
+            <span class="text-[10px] font-medium">Orders</span>
+        </a>
+        <a href="#profile" class="nav-link flex flex-col items-center gap-1 text-gray-400 hover:text-primary transition w-16" data-target="profile">
+            <i class="fa-regular fa-user text-xl"></i>
+            <span class="text-[10px] font-medium">Account</span>
+        </a>
+    </nav>
+    
+    <!-- Global Toast Container -->
+    <div id="toast-container" class="fixed top-20 left-1/2 -translate-x-1/2 flex flex-col gap-2 z-50 pointer-events-none w-11/12 max-w-sm"></div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // Supabase Configuration
+        // Note: Removing spaces from the project ref
+        const SUPABASE_URL = "https://fgawvfxchxmsprrqmmns.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnYXd2ZnhjaHhtc3BycnFtbW5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2Mjc5NDksImV4cCI6MjA5MjIwMzk0OX0.1YuWLQxHbBx8tGH5cmFQE5zn3eOaARCUCEPrn18PMrM";
+        
+        try {
+            window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log("🟢 Supabase client initialized.");
+        } catch (e) {
+            console.error("🔴 Supabase init error:", e);
+        }
+    </script>
+
+    <!-- Application Scripts -->
+    <script src="js/utils.js"></script>
+    <!-- Feature files -->
+    <script src="js/booking.js"></script>
+    <script src="js/orders.js"></script>
+    <script src="js/profile.js"></script>
+    <!-- App entry point and routing -->
+    <script src="js/app.js"></script>
+</body>
+</html>
