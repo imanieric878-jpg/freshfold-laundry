@@ -40,7 +40,7 @@ app.post('/api/mpesa/stkpush', async (req, res) => {
         };
 
         const response = await axios.post(
-            "https://api.lipana.dev/v1/stk/push",
+            "https://api.lipana.dev/v1/mpesa/stk/push",
             payload,
             { 
                 headers: { 
