@@ -63,8 +63,14 @@ app.post('/api/mpesa/stkpush', async (req, res) => {
         console.log(`✅ Lipana Request Accepted: ${response.data.checkout_id}`);
         res.json({ success: true, data: response.data });
     } catch (error) {
-        console.error("❌ Lipana STK Push Failed:", error.response ? error.response.data : error.message);
-        res.status(500).json({ success: false, error: 'Payment initiation failed. Check server logs.' });
+            // Detailed error reporting for debugging
+      const errorMessage = error.response ? JSON.stringify(error.response.data) : error.message;
+        console.error("❌ Lipana STK Push Failed:", errorMessage);
+        res.status(500).json({ 
+            success: false, 
+            error: 'M-PESA Trigger Failed',
+            details: errorMessage
+        });
     }
 });
 
