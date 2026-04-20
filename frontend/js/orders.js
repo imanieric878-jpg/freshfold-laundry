@@ -197,13 +197,13 @@ window.OrdersModule = {
                 </div>
 
                 <div class="bg-primary/5 rounded-[32px] p-6 border border-primary/10">
-                    <div class="flex items-center gap-4">
+                    <a href="https://wa.me/254704372636?text=Hello%20FreshFold%20Support,%20I%20need%20help%20with%20my%20Order%20%23${order.id.slice(0,8)}" target="_blank" class="flex items-center gap-4 cursor-pointer">
                         <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center"><i class="fa-solid fa-headset"></i></div>
                         <div>
                             <h4 class="text-sm font-bold text-gray-900">Need help with this order?</h4>
                             <p class="text-xs text-gray-500">Contact our support 24/7</p>
                         </div>
-                    </div>
+                    </a>
                 </div>
             </div>
         `;
