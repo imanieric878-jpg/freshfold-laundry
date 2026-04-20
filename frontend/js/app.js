@@ -108,7 +108,57 @@ async function handleRoute() {
 }
 
 window.addEventListener('hashchange', handleRoute);
-window.addEventListener('load', initApp);
+window.addEventListener('load', () => {
+    initApp();
+    setupNotificationToggle();
+});
+
+// ---- Utility: Notifications & Header ----
+
+function setupNotificationToggle() {
+    const bell = document.getElementById('notification-bell');
+    const dropdown = document.getElementById('notif-dropdown');
+    
+    if (bell && dropdown) {
+        bell.onclick = (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
+            document.getElementById('notif-badge').classList.add('hidden');
+        };
+        
+        document.addEventListener('click', () => dropdown.classList.add('hidden'));
+        dropdown.onclick = (e) => e.stopPropagation();
+    }
+}
+
+window.AppUtils.addNotification = function(title, msg) {
+    const list = document.getElementById('notif-list');
+    const badge = document.getElementById('notif-badge');
+    
+    if (!list) return;
+
+    // Remove empty state if present
+    if (list.innerText.includes('No new notifications')) list.innerHTML = '';
+
+    const div = document.createElement('div');
+    div.className = 'p-4 border-b border-gray-50 hover:bg-gray-50 transition fade-in';
+    div.innerHTML = `
+        <h4 class="font-bold text-xs text-gray-900">${title}</h4>
+        <p class="text-[10px] text-gray-500 mt-1">${msg}</p>
+    `;
+    list.prepend(div);
+    badge.classList.remove('hidden');
+};
+
+window.AppUtils.clearNotifications = function() {
+    const list = document.getElementById('notif-list');
+    if (list) list.innerHTML = '<div class="p-8 text-center text-gray-400 text-xs">No new notifications</div>';
+};
+
+window.AppUtils.updateLocationHeader = function(address) {
+    const el = document.getElementById('header-location');
+    if (el && address) el.innerText = address.split(',')[0];
+};
 
 // ---- Views: Home & Services ----
 
