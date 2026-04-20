@@ -70,7 +70,9 @@ window.ProfileModule = {
                 </div>
 
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
-                    ${this.menuItem('fa-location-dot', 'Saved Addresses', 'Add an address')}
+                    <div onclick="window.ProfileModule.viewAddresses()">
+                        ${this.menuItem('fa-location-dot', 'Saved Addresses', 'View previous locations')}
+                    </div>
                     ${this.menuItem('fa-wallet', 'Payment Methods', 'M-PESA Standard')}
                 </div>
 
@@ -111,7 +113,7 @@ window.ProfileModule = {
                 </div>
                 <h2 class="text-2xl font-black text-center mb-2">Welcome to FreshFold</h2>
                 <p class="text-center text-gray-500 text-sm mb-10">${this.state.isLoginView ? 'Login to your account.' : 'Create a new account.'}</p>
-
+ 
                 <div class="space-y-4 mb-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
@@ -176,6 +178,41 @@ window.ProfileModule = {
 
     logout: async function() {
         await window.supabase.auth.signOut();
+    },
+
+    viewAddresses: async function() {
+        const container = document.getElementById('app-content');
+        container.innerHTML = `<div class="p-20 text-center"><i class="fa-solid fa-spinner fa-spin text-primary text-3xl"></i></div>`;
+        
+        // Fetch unique addresses from orders
+        const { data } = await window.supabase
+            .from('orders')
+            .select('address')
+            .eq('user_id', this.state.currentUser.id);
+            
+        const uniqueAddresses = [...new Set((data || []).map(o => o.address))];
+
+        let listHtml = '';
+        if (uniqueAddresses.length === 0) {
+            listHtml = '<p class="text-center py-20 text-gray-400 text-sm">No saved addresses found.</p>';
+        } else {
+            listHtml = uniqueAddresses.map(addr => `
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-3 flex items-center gap-4">
+                    <div class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-primary shrink-0"><i class="fa-solid fa-location-dot"></i></div>
+                    <div class="text-sm font-medium text-gray-700">${addr}</div>
+                </div>
+            `).join('');
+        }
+
+        container.innerHTML = `
+            <div class="fade-in">
+                <div class="flex items-center gap-4 mb-8">
+                    <button onclick="window.ProfileModule.render()" class="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center text-gray-400"><i class="fa-solid fa-arrow-left"></i></button>
+                    <h2 class="text-xl font-bold">Saved Addresses</h2>
+                </div>
+                ${listHtml}
+            </div>
+        `;
     }
 };
 
