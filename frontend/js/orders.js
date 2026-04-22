@@ -183,8 +183,10 @@ window.OrdersModule = {
                     <div class="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] mb-4">Tracking ID: ${order.id.slice(0,8)}</div>
                     <h2 class="text-3xl font-black text-gray-900 mb-2">${AppUtils.formatCurrency(order.total_amount)}</h2>
                     <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full ${order.payment_status === 'Paid' ? 'bg-green-500' : 'bg-orange-500'} animate-pulse"></div>
-                        <p class="text-xs font-bold ${order.payment_status === 'Paid' ? 'text-green-600' : 'text-orange-600'}">${order.payment_status === 'Paid' ? 'Payment Confirmed' : 'Waiting for M-PESA Payment'}</p>
+                        <div class="w-2 h-2 rounded-full ${order.payment_status === 'Paid' ? 'bg-green-500' : 'bg-orange-500 animate-pulse'}"></div>
+                        <p class="text-xs font-bold ${order.payment_status === 'Paid' ? 'text-green-600' : 'text-orange-600'}">
+                            ${order.payment_status === 'Paid' ? 'Payment Confirmed ✅' : 'Waiting for M-PESA Payment'}
+                        </p>
                     </div>
                 </div>
 
