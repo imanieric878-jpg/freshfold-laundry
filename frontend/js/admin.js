@@ -85,7 +85,12 @@ window.AdminModule = {
                             </div>
                             <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">${AppUtils.formatDate(order.created_at)}</p>
                         </div>
-                        <a href="https://wa.me/${order.phone.replace(/\D/g,'')}" target="_blank" class="w-8 h-8 bg-green-50 text-green-500 rounded-full flex items-center justify-center text-xs">
+                        <a href="https://wa.me/${(function(p){
+                            let num = p.replace(/\D/g,'');
+                            if (num.startsWith('0')) num = '254' + num.substring(1);
+                            if (num.length === 9 && (num.startsWith('7') || num.startsWith('1'))) num = '254' + num;
+                            return num;
+                        })(order.phone)}" target="_blank" class="w-8 h-8 bg-green-50 text-green-500 rounded-full flex items-center justify-center text-xs">
                             <i class="fa-brands fa-whatsapp"></i>
                         </a>
                     </div>
