@@ -14,6 +14,10 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+app.get('/', (req, res) => {
+    res.json({ status: "FreshFold API is LIVE 🚀", version: "2.1" });
+});
+
 console.log("⚡ Supabase Admin: Connection Established");
 
 /**
@@ -80,42 +84,65 @@ app.post('/api/mpesa/stkpush', async (req, res) => {
 app.post('/api/mpesa/callback', async (req, res) => {
     // Send 200 OK immediately to acknowledge receipt
     res.status(200).send("OK");
-    
-    // Lipana.dev usually passes the raw M-Pesa Body or a flattened version.
-    // We handle both for maximum reliability.
-    const body = req.body.Body || req.body; 
-    const stkCallback = body.stkCallback || body;
-    
-    const checkoutRequestId = stkCallback.CheckoutRequestID || stkCallback.checkout_id;
-    const resultCode = stkCallback.ResultCode !== undefined ? stkCallback.ResultCode : (stkCallback.status === 'Success' ? 0 : 1);
-
-    console.log(`\n📩 Received M-PESA Callback [${checkoutRequestId}]`);
 
     try {
-        if (resultCode === 0) {
-            // Success: Update the order payment_status in Supabase
-            const { data, error } = await supabase
+        console.log("📥 Received M-Pesa Callback:", JSON.stringify(req.body));
+
+        // Lipana.dev sends data nested in a 'data' object for events like 'payment.success'
+        const event = req.body.event;
+        const payload = req.body.data || req.body;
+        
+        // We look for the ID we saved (checkout_id, transactionId, or CheckoutRequestID)
+        const checkoutId = payload.transactionId || payload.checkout_id || payload.CheckoutRequestID || payload.Body?.stkCallback?.CheckoutRequestID;
+        const isSuccess = event === 'payment.success' || payload.status === 'success' || payload.status === 'Success' || payload.ResultCode === 0 || payload.Body?.stkCallback?.ResultCode === 0;
+
+        if (isSuccess && checkoutId) {
+            const { error } = await supabase
                 .from('orders')
                 .update({ 
                     payment_status: 'Paid',
                     status: 'Requested'
                 })
-                .eq('checkout_id', checkoutRequestId)
-                .select();
-
-            if (error) throw error;
-            console.log(`✅ Payment SUCCESS: Updated Order ID ${data[0]?.id}`);
-        } else {
-            // Failure
-            await supabase
-                .from('orders')
-                .update({ payment_status: 'Failed' })
-                .eq('checkout_id', checkoutRequestId);
+                .eq('checkout_id', checkoutId);
             
-            console.log(`❌ Payment FAILED: ${stkCallback.ResultDesc || stkCallback.message}`);
+            if (error) {
+                console.error("❌ Failed to update Supabase on callback:", error.message);
+            } else {
+                console.log(`✅ Payment CONFIRMED for ID: ${checkoutId}`);
+            }
         }
     } catch (e) {
         console.error("❌ Error processing callback:", e.message);
+    }
+});
+
+/**
+ * 4. Admin Endpoints
+ * Used by the Admin Panel to update order statuses, bypassing RLS.
+ */
+app.post('/api/admin/update-status', async (req, res) => {
+    const { id, status, adminEmail } = req.body;
+    if (adminEmail !== 'imanieric878@gmail.com') return res.status(403).json({ error: "Unauthorized" });
+
+    try {
+        const { error } = await supabase.from('orders').update({ status }).eq('id', id);
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/admin/toggle-payment', async (req, res) => {
+    const { id, payment_status, adminEmail } = req.body;
+    if (adminEmail !== 'imanieric878@gmail.com') return res.status(403).json({ error: "Unauthorized" });
+
+    try {
+        const { error } = await supabase.from('orders').update({ payment_status }).eq('id', id);
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
     }
 });
 
